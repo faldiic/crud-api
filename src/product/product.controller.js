@@ -1,6 +1,3 @@
-// Layer untuk handle req dan res
-// Biasanya juga untuk handle validasi body
-
 const express = require('express');
 const prisma = require("../db");
 const { getAllProducts, getProductById, createProduct, deleteProductById, editProductById } = require('./product.service');
@@ -8,19 +5,26 @@ const { getAllProducts, getProductById, createProduct, deleteProductById, editPr
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-    const products = await getAllProducts();
-
-    res.send(products);
+    try {
+        const products = await getAllProducts();
+        res.status(200).send(products); // 200 OK
+    } catch (err) {
+        res.status(500).send({ message: "Failed to fetch products", error: err.message }); // 500 Internal Server Error
+    }
 });
 
-router.get("/:id", async  (req, res) => {
+router.get("/:id", async (req, res) => {
     try {
-        const productId = parseInt(req.params.id)
-        const product = await getProductById(parseInt(productId));
+        const productId = parseInt(req.params.id);
+        const product = await getProductById(productId);
         
-        res.send(product);
+        if (!product) {
+            return res.status(404).send({ message: "Product not found" }); // 404 Not Found
+        }
+
+        res.status(200).send(product); // 200 OK
     } catch (err) {
-        res.status(400).send(err.message);
+        res.status(400).send({ message: "Invalid product ID", error: err.message }); // 400 Bad Request
     }
 });
 
@@ -29,63 +33,69 @@ router.post("/", async (req, res) => {
         const newProductData = req.body;
         const product = await createProduct(newProductData);
         
-        res.send({
+        res.status(201).send({
             data: product,
-            message: "create product succsess",
+            message: "Product created successfully", // 201 Created
         });
     } catch (err) {
-        res.status(400).send(err.message)
+        res.status(400).send({ message: "Failed to create product", error: err.message }); // 400 Bad Request
     }
 });
 
 router.delete("/:id", async (req, res) => {
     try {
-        const productId = req.params.id // masih string
-    
-        await deleteProductById(parseInt(productId)); 
-    
-        res.send("product deleted");
+        const productId = parseInt(req.params.id);
+
+        const deletedProduct = await deleteProductById(productId);
+        if (!deletedProduct) {
+            return res.status(404).send({ message: "Product not found" }); // 404 Not Found
+        }
+
+        res.status(200).send({ message: "Product deleted successfully" }); // 200 OK
     } catch (err) {
-        res.status(400).send(err.message)
+        res.status(400).send({ message: "Invalid product ID", error: err.message }); // 400 Bad Request
     }
 });
 
 router.put("/:id", async (req, res) => {
-    const productId = req.params.id;
-    const productData = req.body;
-    
-    if (
-        !(
-            productData.image && 
-            productData.name && 
-            productData.description && 
-            productData.price
-        )
-    ) {
-        return res.status(400).send("Some fields are missing");
+    try {
+        const productId = parseInt(req.params.id);
+        const productData = req.body;
+        
+        if (!productData.image || !productData.name || !productData.description || !productData.price) {
+            return res.status(400).send({ message: "Some fields are missing" }); // 400 Bad Request
+        }
+
+        const product = await editProductById(productId, productData);
+        if (!product) {
+            return res.status(404).send({ message: "Product not found" }); // 404 Not Found
+        }
+
+        res.status(200).send({
+            data: product,
+            message: "Product updated successfully", // 200 OK
+        });
+    } catch (err) {
+        res.status(500).send({ message: "Failed to update product", error: err.message }); // 500 Internal Server Error
     }
-
-    const product = await editProductById(parseInt(productId), productData);
-
-    res.send({
-        data: product,
-        message: "edit product succsess",
-    })
 });
 
 router.patch("/:id", async (req, res) => {
     try {
-        const productId = req.params.id;
+        const productId = parseInt(req.params.id);
         const productData = req.body;
-    
-        const product = await editProductById(parseInt(productId), productData);
-    
-        res.send({
+
+        const product = await editProductById(productId, productData);
+        if (!product) {
+            return res.status(404).send({ message: "Product not found" }); // 404 Not Found
+        }
+
+        res.status(200).send({
             data: product,
-            message: "edit product succsess",
+            message: "Product updated successfully", // 200 OK
         });
     } catch (err) {
-        res.status(400).send(err.message);
+        res.status(400).send({ message: "Failed to update product", error: err.message }); // 400 Bad Request
     }
 });
 
