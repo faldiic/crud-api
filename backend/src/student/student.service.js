@@ -16,10 +16,10 @@ const createStudent = async (newStudentData) => {
     return await insertStudent(newStudentData);
 };
 
-const deleteStudentById = async (id) => {
-    await getStudentById(id);
-    await deleteStudent(id);
+const deleteStudentById = async (npm) => {
+    await deleteStudent(npm);   
 };
+
 
 const editStudentById = async (id, studentData) => {
     await getStudentById(id);
