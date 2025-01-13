@@ -7,16 +7,16 @@ dotenv.config();
 
 const PORT = process.env.PORT;
 
-app.use(express.json())
+app.use(express.json());
 
 app.get("/api", (req, res) => {
     res.send("Selamat Datang di API saya");
 });
 
-const productController = require("./product/product.controller");
+const studentController = require("./student/student.controller");
 
-app.use("/products", productController);
+app.use("/students", studentController);
 
 app.listen(PORT, () => {
-    console.log("Express API running in port: " + PORT);
+    console.log("Express API running on port: " + PORT);
 });

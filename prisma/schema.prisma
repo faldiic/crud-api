@@ -13,10 +13,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Product{
-  id Int @id @default(autoincrement())
-  name String
-  price Int
-  description String
-  image String
+model Student {
+  npm     Int   @id @unique  
+  nama    String
+  kelas   String 
+  alamat  String
+  no_hp   String
+  status  String
 }
